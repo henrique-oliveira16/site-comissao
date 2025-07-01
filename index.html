@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cálculo de Comissão</title>
+  <link rel="icon" type="image/png" href="https://www.php.net/images/logos/php-logo.svg">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,6 +16,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      flex-direction: column;
     }
 
     .container {
@@ -22,9 +24,10 @@
       padding: 30px;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 84, 166, 0.1);
-      max-width: 400px;
+      max-width: 500px;
       width: 100%;
       text-align: center;
+      margin-bottom: 20px;
     }
 
     h1 {
@@ -75,6 +78,20 @@
     strong {
       color: #ff6b00;
     }
+
+    footer {
+      margin-top: 20px;
+      text-align: center;
+      color: #666;
+    }
+
+    .meta-input {
+      display: none;
+    }
+
+    .show {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -82,14 +99,19 @@
     <h1>Calcular Comissão</h1>
 
     <label for="cargo">Tipo de vendedor:</label>
-    <select id="cargo" required>
+    <select id="cargo" required onchange="toggleMetaInput()">
       <option value="" disabled selected>-- Escolha --</option>
-      <option value="externo">Funcionário - Externo</option>
-      <option value="interno">Funcionário - Interno</option>
+      <option value="consultor">Consultor II PAP</option>
+      <option value="lider">Líder PAP</option>
     </select>
 
     <label for="receita">Valor da receita (R$):</label>
     <input type="number" id="receita" placeholder="0,00" min="0" step="0.01" required />
+
+    <div id="meta-container" class="meta-input">
+      <label for="meta">Atingimento da meta (%):</label>
+      <input type="number" id="meta" placeholder="0" min="0" max="140" step="0.01" />
+    </div>
 
     <button onclick="calcularComissao()">Calcular Comissão</button>
 
@@ -97,38 +119,101 @@
   </div>
 
   <script>
+    function toggleMetaInput() {
+      const cargo = document.getElementById("cargo").value;
+      const metaContainer = document.getElementById("meta-container");
+      
+      if (cargo === "lider") {
+        metaContainer.classList.add("show");
+      } else {
+        metaContainer.classList.remove("show");
+      }
+    }
+
     function calcularComissao() {
       const cargo = document.getElementById("cargo").value;
-      const receita = parseFloat(document.getElementById("receita").value.replace(",", "."));
-      let fator = 0;
+      const receita = parseFloat(document.getElementById("receita").value);
+      const meta = parseFloat(document.getElementById("meta").value);
+      
+      let resultadoHTML = "";
+      let comissaoTotal = 0;
 
-      if (isNaN(receita) || receita <= 0 || !cargo) {
-        document.getElementById("resultado").innerHTML = "<p><strong>Preencha todos os campos corretamente.</strong></p>";
+      if (isNaN(receita) {
+        document.getElementById("resultado").innerHTML = "<p><strong>Preencha o valor da receita corretamente.</strong></p>";
         return;
       }
 
-      // Aqui estão as faixas oficiais de comissão
-      if (receita >= 0.01 && receita <= 1000.00) fator = 0.15;
-      else if (receita <= 1500.00) fator = 0.20;
-      else if (receita <= 2000.00) fator = 0.25;
-      else if (receita <= 2500.00) fator = 0.35;
-      else if (receita <= 3000.00) fator = 0.45;
-      else if (receita <= 3500.00) fator = 0.55;
-      else if (receita <= 4000.00) fator = 0.65;
-      else if (receita <= 4500.00) fator = 0.75;
-      else if (receita <= 5000.00) fator = 1.00;
-      else fator = 1.20;
+      // Cálculo para Consultor II PAP
+      if (cargo === "consultor") {
+        let fator = 0;
+        
+        if (receita >= 0.01 && receita <= 1000.00) fator = 0.15;
+        else if (receita <= 1500.00) fator = 0.20;
+        else if (receita <= 2000.00) fator = 0.25;
+        else if (receita <= 2500.00) fator = 0.35;
+        else if (receita <= 3000.00) fator = 0.45;
+        else if (receita <= 3500.00) fator = 0.55;
+        else if (receita <= 4000.00) fator = 0.65;
+        else if (receita <= 4500.00) fator = 0.75;
+        else if (receita <= 5000.00) fator = 1.00;
+        else fator = 1.20;
 
-      const comissao = receita * fator;
+        const comissaoVenda = receita * fator;
+        comissaoTotal = comissaoVenda;
 
-      // Exibe os resultados
-      document.getElementById("resultado").innerHTML = `
-        <p><strong>Tipo de vendedor:</strong> ${cargo === "externo" ? "Funcionário - Externo" : "Funcionário - Interno"}</p>
-        <p><strong>Valor da receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
-        <p><strong>Fator aplicado:</strong> ${fator}</p>
-        <p><strong>Comissão calculada:</strong> R$ ${comissao.toFixed(2).replace(".", ",")}</p>
-      `;
+        resultadoHTML = `
+          <p><strong>Tipo de vendedor:</strong> Consultor II PAP</p>
+          <p><strong>Valor da receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Fator aplicado:</strong> ${fator}</p>
+          <p><strong>Comissão por venda:</strong> R$ ${comissaoVenda.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Total a receber:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
+        `;
+      } 
+      // Cálculo para Líder PAP
+      else if (cargo === "lider") {
+        if (isNaN(meta) {
+          document.getElementById("resultado").innerHTML = "<p><strong>Preencha o percentual de meta corretamente.</strong></p>";
+          return;
+        }
+
+        // Cálculo da RV baseada na meta
+        let rvMeta = 0;
+        let adicional = 0;
+        
+        if (meta < 85) {
+          rvMeta = 0;
+        } else if (meta >= 85 && meta < 100) {
+          rvMeta = 600.00;
+        } else if (meta >= 100) {
+          rvMeta = 1000.00;
+          
+          // Cálculo do adicional a cada 5% acima de 100% (até 140%)
+          if (meta > 100) {
+            const percentualAcima = Math.min(meta, 140) - 100;
+            const adicional5 = Math.floor(percentualAcima / 5);
+            adicional = adicional5 * 200.00;
+          }
+        }
+
+        comissaoTotal = rvMeta + adicional;
+
+        resultadoHTML = `
+          <p><strong>Tipo de vendedor:</strong> Líder PAP</p>
+          <p><strong>Atingimento da meta:</strong> ${meta.toFixed(2).replace(".", ",")}%</p>
+          <p><strong>RV base:</strong> R$ ${rvMeta.toFixed(2).replace(".", ",")}</p>
+          ${adicional > 0 ? `<p><strong>Adicional (a cada 5% acima de 100%):</strong> R$ ${adicional.toFixed(2).replace(".", ",")}</p>` : ''}
+          <p><strong>Total a receber (RV):</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
+        `;
+      } else {
+        document.getElementById("resultado").innerHTML = "<p><strong>Selecione um tipo de vendedor válido.</strong></p>";
+        return;
+      }
+
+      document.getElementById("resultado").innerHTML = resultadoHTML;
     }
   </script>
+  <footer>
+    <p>Desenvolvido por Henrique</p>
+  </footer>
 </body>
 </html>
