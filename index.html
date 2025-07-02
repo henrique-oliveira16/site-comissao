@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cálculo de Comissão</title>
+  <style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #ff6b00, #8e44ad, #d63384);
+  color: white;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.container {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #003366;
+}
+
+h1 {
+  margin-bottom: 20px;
+  color: #8e44ad;
+  font-size: 24px;
+}
+
+label {
+  display: block;
+  text-align: left;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #6c3483;
+}
+
+select, input[type="number"], button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+button {
+  background-color: #ff6b00;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #d63384;
+}
+
+.resultado {
+  margin-top: 20px;
+  text-align: left;
+  color: #003366;
+}
+
+.resultado p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+strong {
+  color: #ff6b00;
+}
+
+footer {
+  margin-top: 20px;
+  text-align: center;
+  color: #f1f1f1;
+}
+
+.additional-input {
+  display: none;
+}
+
+.show {
+  display: block;
+}
+
+.checkbox-container {
+  text-align: left;
+  margin-bottom: 15px;
+  color: #003366;
+}
+
+.checkbox-container input {
+  width: auto;
+  margin-right: 10px;
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Calcular Prêmio</h1>
+
+    <label for="cargo">Tipo de vendedor:</label>
+    <select id="cargo" required onchange="toggleAdditionalInputs()">
+      <option value="" disabled selected>-- Escolha --</option>
+      <option value="consultor1">Consultor I PAP</option>
+      <option value="consultor2">Consultor II PAP</option>
+      <option value="lider">Líder</option>
+    </select>
+
+    <label for="receita">Valor da receita (R$):</label>
+    <input type="number" id="receita" placeholder="0,00" min="0" step="0.01" required />
+
+    <div id="meta-container" class="additional-input">
+      <label for="meta">Meta da equipe (R$):</label>
+      <input type="number" id="meta" placeholder="0,00" min="0" step="0.01" />
+    </div>
+
+    <div id="receita-equipe-container" class="additional-input">
+      <label for="receita-equipe">Receita da equipe (R$):</label>
+      <input type="number" id="receita-equipe" placeholder="0,00" min="0" step="0.01" />
+    </div>
+
+    <div id="vendas-container" class="additional-input">
+      <label for="vendas">Quantidade de vendas realizadas pela equipe:</label>
+      <input type="number" id="vendas" placeholder="0" min="0" step="1" />
+    </div>
+
+    <div id="plano-container" class="additional-input">
+      <label for="vendeu-plano">Vendeu plano móvel?</label>
+      <input type="checkbox" id="vendeu-plano" checked>
+    </div>
+
+    <button onclick="calcularComissao()">Calcular Prêmio</button>
+
+    <div class="resultado" id="resultado"></div>
+  </div>
+
+  <script>
+    function toggleAdditionalInputs() {
+      const cargo = document.getElementById("cargo").value;
+      const metaContainer = document.getElementById("meta-container");
+      const receitaEquipeContainer = document.getElementById("receita-equipe-container");
+      const vendasContainer = document.getElementById("vendas-container");
+      const planoContainer = document.getElementById("plano-container");
+
+      metaContainer.classList.remove("show");
+      receitaEquipeContainer.classList.remove("show");
+      vendasContainer.classList.remove("show");
+      planoContainer.classList.remove("show");
+
+      if (cargo === "consultor2" || cargo === "lider") {
+        metaContainer.classList.add("show");
+        receitaEquipeContainer.classList.add("show");
+      }
+      if (cargo === "consultor2") {
+        vendasContainer.classList.add("show");
+      }
+      if (cargo === "consultor1") {
+        planoContainer.classList.add("show");
+      }
+    }
+
+    function calcularComissao() {
+      const cargo = document.getElementById("cargo").value;
+      const receita = parseFloat(document.getElementById("receita").value) || 0;
+      const meta = parseFloat(document.getElementById("meta").value) || 0;
+      const receitaEquipe = parseFloat(document.getElementById("receita-equipe").value) || 0;
+      const vendas = parseInt(document.getElementById("vendas").value) || 0;
+      const vendeuPlano = document.getElementById("vendeu-plano").checked;
+
+      let resultadoHTML = "";
+      let comissaoTotal = 0;
+
+      if (!cargo || (cargo === "consultor1" && receita <= 0) || 
+          ((cargo === "consultor2" || cargo === "lider") && (meta <= 0 || receitaEquipe <= 0)) ||
+          (cargo === "consultor2" && vendas < 0)) {
+        document.getElementById("resultado").innerHTML = "<p><strong>Preencha todos os campos corretamente.</strong></p>";
+        return;
+      }
+
+      if (cargo === "consultor1") {
+        const atingimento = (receita / meta) * 100;
+        if (atingimento < 85) {
+          comissaoTotal = 0;
+        } else if (atingimento < 100) {
+          comissaoTotal = 600;
+        } else {
+          comissaoTotal = 1000;
+          const percentualAcima = Math.min(atingimento, 140) - 85;
+          const adicional5 = Math.floor(percentualAcima / 5);
+          comissaoTotal += adicional5 * 200;
+        }
+
+        if (!vendeuPlano) {
+          comissaoTotal *= 0.8; // 20% desconto
+        }
+
+        resultadoHTML = `
+          <p><strong>Tipo de vendedor:</strong> Consultor I PAP</p>
+          <p><strong>Valor da receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Meta:</strong> R$ ${meta.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Atingimento:</strong> ${atingimento.toFixed(2)}%</p>
+          ${!vendeuPlano ? '<p><strong>Desconto (não vendeu plano móvel):</strong> 20%</p>' : ''}
+          <p><strong>Total a receber:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
+        `;
+      } else if (cargo === "consultor2") {
+        const atingimentoEquipe = (receitaEquipe / meta) * 100;
+        let comissaoEquipe = 0;
+
+        if (atingimentoEquipe >= 85) {
+          if (atingimentoEquipe < 100) {
+            comissaoEquipe = 600;
+          } else {
+            comissaoEquipe = 1000;
+            const percentualAcima = Math.min(atingimentoEquipe, 140) - 85;
+            const adicional5 = Math.floor(percentualAcima / 5);
+            comissaoEquipe += adicional5 * 200;
+          }
+        }
+
+        resultadoHTML = `
+          <p><strong>Tipo de vendedor:</strong> Consultor II PAP</p>
+          <p><strong>Receita da equipe:</strong> R$ ${receitaEquipe.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Meta da equipe:</strong> R$ ${meta.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Atingimento da equipe:</strong> ${atingimentoEquipe.toFixed(2)}%</p>
+          <p><strong>Quantidade de vendas:</strong> ${vendas}</p>
+          <p><strong>Total a receber:</strong> R$ ${comissaoEquipe.toFixed(2).replace(".", ",")}</p>
+        `;
+      } else if (cargo === "lider") {
+        const atingimentoEquipe = (receitaEquipe / meta) * 100;
+        let comissaoEquipe = 0;
+
+        if (atingimentoEquipe >= 85) {
+          if (atingimentoEquipe < 100) {
+            comissaoEquipe = 600;
+          } else {
+            comissaoEquipe = 1000;
+            const percentualAcima = Math.min(atingimentoEquipe, 140) - 85;
+            const adicional5 = Math.floor(percentualAcima / 5);
+            comissaoEquipe += adicional5 * 200;
+          }
+        }
+
+        resultadoHTML = `
+          <p><strong>Tipo de vendedor:</strong> Líder</p>
+          <p><strong>Receita da equipe:</strong> R$ ${receitaEquipe.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Meta da equipe:</strong> R$ ${meta.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Atingimento da equipe:</strong> ${atingimentoEquipe.toFixed(2)}%</p>
+          <p><strong>Total a receber:</strong> R$ ${comissaoEquipe.toFixed(2).replace(".", ",")}</p>
+        `;
+      }
+
+      document.getElementById("resultado").innerHTML = resultadoHTML;
+    }
+  </script>
+  <footer>
+    <p>Desenvolvido por Henrique Oliveira</p>
+  </footer>
+</body>
+</html>
