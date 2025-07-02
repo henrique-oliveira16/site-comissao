@@ -107,11 +107,9 @@
       margin-right: 10px;
     }
   </style>
-</head>
 <body>
   <div class="container">
     <h1>Simulador de Prêmio</h1>
-
     <label for="cargo">Tipo de vendedor:</label>
     <select id="cargo" required onchange="toggleAdditionalInputs()">
       <option value="" disabled selected>-- Escolha --</option>
@@ -143,24 +141,9 @@
   <script>
     function toggleAdditionalInputs() {
       const cargo = document.getElementById("cargo").value;
-      const receitaContainer = document.getElementById("receita-container");
-      const metaContainer = document.getElementById("meta-container");
-      const planoContainer = document.getElementById("plano-container");
-
-      // Mostrar/ocultar campos conforme o cargo selecionado
-      if (cargo === "consultor1") {
-        receitaContainer.style.display = "block";
-        metaContainer.classList.remove("show");
-        planoContainer.style.display = "block";
-      } else if (cargo === "consultor2") {
-        receitaContainer.style.display = "block";
-        metaContainer.classList.add("show");
-        planoContainer.style.display = "block";
-      } else if (cargo === "lider") {
-        receitaContainer.style.display = "none";
-        metaContainer.classList.add("show");
-        planoContainer.style.display = "none";
-      }
+      document.getElementById("receita-container").style.display = cargo === "lider" ? "none" : "block";
+      document.getElementById("meta-container").classList.toggle("show", cargo !== "consultor1");
+      document.getElementById("plano-container").style.display = "block";
     }
 
     function calcularComissao() {
@@ -168,148 +151,110 @@
       const receita = parseFloat(document.getElementById("receita").value) || 0;
       const meta = parseFloat(document.getElementById("meta").value) || 0;
       const vendeuPlano = document.getElementById("vendeu-plano").checked;
-      
+
       let resultadoHTML = "";
       let comissaoTotal = 0;
       let comissaoVenda = 0;
       let comissaoEquipe = 0;
 
-      // Validação básica
       if (!cargo) {
         document.getElementById("resultado").innerHTML = "<p><strong>Selecione um tipo de vendedor.</strong></p>";
         return;
       }
 
-      // Cálculo para Consultor I PAP
+      // Tabela VENDEU & GANHOU (fator por receita)
+      const getFator = receita => {
+        if (receita <= 1000) return 0.15;
+        else if (receita <= 1500) return 0.20;
+        else if (receita <= 2000) return 0.25;
+        else if (receita <= 2500) return 0.35;
+        else if (receita <= 3000) return 0.45;
+        else if (receita <= 3500) return 0.55;
+        else if (receita <= 4000) return 0.65;
+        else if (receita <= 4500) return 0.75;
+        else if (receita <= 5000) return 1.00;
+        else return 1.20;
+      };
+
       if (cargo === "consultor1") {
         if (receita <= 0) {
           document.getElementById("resultado").innerHTML = "<p><strong>Informe um valor de receita válido.</strong></p>";
           return;
         }
-
-        // Cálculo baseado nas faixas de receita
-        let fator = 0;
-        
-        if (receita >= 0.01 && receita <= 1000.00) fator = 0.15;
-        else if (receita <= 1500.00) fator = 0.20;
-        else if (receita <= 2000.00) fator = 0.25;
-        else if (receita <= 2500.00) fator = 0.35;
-        else if (receita <= 3000.00) fator = 0.45;
-        else if (receita <= 3500.00) fator = 0.55;
-        else if (receita <= 4000.00) fator = 0.65;
-        else if (receita <= 4500.00) fator = 0.75;
-        else if (receita <= 5000.00) fator = 1.00;
-        else fator = 1.20;
-
+        const fator = getFator(receita);
         comissaoVenda = receita * fator;
         comissaoTotal = comissaoVenda;
-
-        // Aplicar desconto se não vendeu plano móvel
-        if (!vendeuPlano) {
-          comissaoTotal *= 0.8; // 20% de desconto
-        }
+        if (!vendeuPlano) comissaoTotal *= 0.8;
 
         resultadoHTML = `
-          <p><strong>Tipo de vendedor:</strong> Consultor I PAP</p>
-          <p><strong>Valor da receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
-          <p><strong>Fator aplicado:</strong> ${fator.toFixed(2)}</p>
+          <p><strong>Tipo:</strong> Consultor I PAP</p>
+          <p><strong>Receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Fator:</strong> ${fator}</p>
           <p><strong>Comissão por venda:</strong> R$ ${comissaoVenda.toFixed(2).replace(".", ",")}</p>
-          ${!vendeuPlano ? '<p><strong>Desconto (não vendeu plano móvel):</strong> 20%</p>' : ''}
-          <p><strong>Total a receber:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
+          ${!vendeuPlano ? '<p><strong>Desconto:</strong> 20%</p>' : ''}
+          <p><strong>Total:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
         `;
       }
-      // Cálculo para Consultor II PAP
+
       else if (cargo === "consultor2") {
-        if (receita <= 0 || isNaN(meta)) {
+        if (receita <= 0 || meta <= 0) {
           document.getElementById("resultado").innerHTML = "<p><strong>Preencha todos os campos corretamente.</strong></p>";
           return;
         }
 
-        // Cálculo da comissão por venda (mesma tabela do Consultor I)
-        let fator = 0;
-        
-        if (receita >= 0.01 && receita <= 1000.00) fator = 0.15;
-        else if (receita <= 1500.00) fator = 0.20;
-        else if (receita <= 2000.00) fator = 0.25;
-        else if (receita <= 2500.00) fator = 0.35;
-        else if (receita <= 3000.00) fator = 0.45;
-        else if (receita <= 3500.00) fator = 0.55;
-        else if (receita <= 4000.00) fator = 0.65;
-        else if (receita <= 4500.00) fator = 0.75;
-        else if (receita <= 5000.00) fator = 1.00;
-        else fator = 1.20;
-
+        const fator = getFator(receita);
         comissaoVenda = receita * fator;
 
-        // Cálculo da comissão da equipe (META TIME)
-        if (meta < 85) {
-          comissaoEquipe = 0;
-        } else if (meta >= 85 && meta < 100) {
-          comissaoEquipe = 250;
-        } else if (meta >= 100) {
-          comissaoEquipe = 450;
-          
-          // Adicional a cada 5% acima de 100% (até 140%)
-          if (meta > 100) {
-            const percentualAcima = Math.min(meta, 140) - 100;
-            const adicional5 = Math.floor(percentualAcima / 5);
-            comissaoEquipe += adicional5 * 100;
-          }
+        if (meta < 85) comissaoEquipe = 0;
+        else if (meta < 100) comissaoEquipe = 600;
+        else {
+          comissaoEquipe = 1000;
+          const adicional = Math.floor(Math.min(meta, 140) - 100) / 5;
+          comissaoEquipe += adicional * 200;
         }
 
         comissaoTotal = comissaoVenda + comissaoEquipe;
-
-        // Aplicar desconto se não vendeu plano móvel
-        if (!vendeuPlano) {
-          comissaoTotal *= 0.8; // 20% de desconto
-        }
+        if (!vendeuPlano) comissaoTotal *= 0.8;
 
         resultadoHTML = `
-          <p><strong>Tipo de vendedor:</strong> Consultor II PAP</p>
-          <p><strong>Valor da receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
-          <p><strong>Fator aplicado:</strong> ${fator.toFixed(2)}</p>
+          <p><strong>Tipo:</strong> Consultor II PAP</p>
+          <p><strong>Receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Fator:</strong> ${fator}</p>
           <p><strong>Comissão por venda:</strong> R$ ${comissaoVenda.toFixed(2).replace(".", ",")}</p>
-          <p><strong>Atingimento da meta:</strong> ${meta.toFixed(2)}%</p>
+          <p><strong>Meta:</strong> ${meta}%</p>
           <p><strong>Comissão da equipe:</strong> R$ ${comissaoEquipe.toFixed(2).replace(".", ",")}</p>
-          ${!vendeuPlano ? '<p><strong>Desconto (não vendeu plano móvel):</strong> 20%</p>' : ''}
-          <p><strong>Total a receber:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
+          ${!vendeuPlano ? '<p><strong>Desconto:</strong> 20%</p>' : ''}
+          <p><strong>Total:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
         `;
       }
-      // Cálculo para Líder PAP
+
       else if (cargo === "lider") {
-        if (isNaN(meta)) {
-          document.getElementById("resultado").innerHTML = "<p><strong>Informe o percentual de meta.</strong></p>";
+        if (meta <= 0) {
+          document.getElementById("resultado").innerHTML = "<p><strong>Informe a meta.</strong></p>";
           return;
         }
 
-        // Cálculo baseado apenas no atingimento da meta
-        if (meta < 85) {
-          comissaoTotal = 0;
-        } else if (meta >= 85 && meta < 100) {
-          comissaoTotal = 600;
-        } else if (meta >= 100) {
+        if (meta < 85) comissaoTotal = 0;
+        else if (meta < 100) comissaoTotal = 600;
+        else {
           comissaoTotal = 1000;
-          
-          // Adicional a cada 5% acima de 100% (até 140%)
-          if (meta > 100) {
-            const percentualAcima = Math.min(meta, 140) - 100;
-            const adicional5 = Math.floor(percentualAcima / 5);
-            comissaoTotal += adicional5 * 200;
-          }
+          const adicional = Math.floor(Math.min(meta, 140) - 100) / 5;
+          comissaoTotal += adicional * 200;
         }
 
+        if (!vendeuPlano) comissaoTotal *= 0.8;
+
         resultadoHTML = `
-          <p><strong>Tipo de vendedor:</strong> Líder PAP</p>
-          <p><strong>Atingimento da meta:</strong> ${meta.toFixed(2)}%</p>
-          <p><strong>Total a receber (RV):</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Tipo:</strong> Líder PAP</p>
+          <p><strong>Meta:</strong> ${meta}%</p>
+          ${!vendeuPlano ? '<p><strong>Desconto:</strong> 20%</p>' : ''}
+          <p><strong>Total:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
         `;
       }
 
       document.getElementById("resultado").innerHTML = resultadoHTML;
     }
   </script>
-  <footer>
-    <p>Desenvolvido por Henrique Oliveira</p>
-  </footer>
+  <footer><p>Desenvolvido por Henrique Oliveira</p></footer>
 </body>
 </html>
