@@ -110,7 +110,7 @@ footer {
 </head>
 <body>
   <div class="container">
-    <h1>Calcular Prêmio</h1>
+    <h1>Simulador de Prêmio</h1>
 
     <label for="cargo">Tipo de vendedor:</label>
     <select id="cargo" required onchange="toggleAdditionalInputs()">
@@ -151,20 +151,24 @@ footer {
   <script>
     function toggleAdditionalInputs() {
       const cargo = document.getElementById("cargo").value;
+      const receitaInput = document.getElementById("receita");
       const metaVendasConsultor1Container = document.getElementById("meta-vendas-consultor1-container");
       const vendasContainer = document.getElementById("vendas-container");
       const metaVendasContainer = document.getElementById("meta-vendas-container");
       const planoContainer = document.getElementById("plano-container");
 
+      receitaInput.style.display = "block";
       metaVendasConsultor1Container.classList.remove("show");
       vendasContainer.classList.remove("show");
       metaVendasContainer.classList.remove("show");
       planoContainer.classList.remove("show");
 
       if (cargo === "consultor1") {
+        receitaInput.style.display = "block";
         metaVendasConsultor1Container.classList.add("show");
         planoContainer.classList.add("show");
       } else if (cargo === "consultor2" || cargo === "lider") {
+        receitaInput.style.display = "none";
         vendasContainer.classList.add("show");
         metaVendasContainer.classList.add("show");
       }
