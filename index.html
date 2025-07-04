@@ -71,6 +71,10 @@
       margin-top: 20px;
       text-align: left;
       color: #003366;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #8e44ad;
     }
 
     .resultado p {
@@ -106,7 +110,16 @@
       width: auto;
       margin-right: 10px;
     }
+
+    .danger {
+      color: #dc3545;
+    }
+
+    .success {
+      color: #28a745;
+    }
   </style>
+</head>
 <body>
   <div class="container">
     <h1>Simulador de Prêmio</h1>
@@ -128,19 +141,20 @@
       <input type="number" id="meta" placeholder="0" min="0" max="140" step="0.01" />
     </div>
 
+    <div id="meta-qtd-container" class="additional-input">
+      <label for="meta-qtd">Meta (quantidade de vendas):</label>
+      <input type="number" id="meta-qtd" placeholder="0" min="1" />
+    </div>
+
+    <div id="vendas-qtd-container" class="additional-input">
+      <label for="vendas-qtd">Quantidade de vendas realizadas:</label>
+      <input type="number" id="vendas-qtd" placeholder="0" min="0" />
+    </div>
+
     <div id="plano-container" class="checkbox-container">
       <input type="checkbox" id="vendeu-plano" checked>
       <label for="vendeu-plano">Vendeu plano móvel?</label>
     </div>
-    <div id="meta-qtd-container" class="additional-input">
-   <label for="meta-qtd">Meta (quantidade de vendas):</label>
-  <input type="number" id="meta-qtd" placeholder="0" min="1" />
-</div>
-
-<div id="vendas-qtd-container" class="additional-input">
-  <label for="vendas-qtd">Quantidade de vendas realizadas:</label>
-  <input type="number" id="vendas-qtd" placeholder="0" min="0" />
-</div>
 
     <button onclick="calcularComissao()">Calcular Prêmio</button>
 
@@ -148,114 +162,172 @@
   </div>
 
   <script>
-function toggleAdditionalInputs() {
-  const cargo = document.getElementById("cargo").value;
-  const receitaContainer = document.getElementById("receita-container");
-  const metaContainer = document.getElementById("meta-container");
-  const planoContainer = document.getElementById("plano-container");
-  const metaQtdContainer = document.getElementById("meta-qtd-container");
-  const vendasQtdContainer = document.getElementById("vendas-qtd-container");
+    function toggleAdditionalInputs() {
+      const cargo = document.getElementById("cargo").value;
+      const receitaContainer = document.getElementById("receita-container");
+      const metaContainer = document.getElementById("meta-container");
+      const metaQtdContainer = document.getElementById("meta-qtd-container");
+      const vendasQtdContainer = document.getElementById("vendas-qtd-container");
+      const planoContainer = document.getElementById("plano-container");
 
-  // Mostrar/ocultar campos conforme o tipo de vendedor
-  receitaContainer.style.display = cargo === "lider" ? "none" : "block";
-  metaContainer.classList.toggle("show", cargo === "lider");
-  metaQtdContainer.classList.toggle("show", cargo === "consultor2");
-  vendasQtdContainer.classList.toggle("show", cargo === "consultor2");
-  
-  // Ocultar checkbox de plano móvel para Líder
-  planoContainer.style.display = cargo === "lider" ? "none" : "block";
-}
-
-function calcularComissao() {
-  const cargo = document.getElementById("cargo").value;
-  const receita = parseFloat(document.getElementById("receita").value) || 0;
-  const metaPercentual = parseFloat(document.getElementById("meta").value) || 0;
-  const metaQuantidade = parseInt(document.getElementById("meta-qtd").value) || 0;
-  const vendasQuantidade = parseInt(document.getElementById("vendas-qtd").value) || 0;
-  const vendeuPlano = document.getElementById("vendeu-plano").checked;
-
-  let resultadoHTML = "";
-  let comissaoTotal = 0;
-  let comissaoVenda = 0;
-  let comissaoEquipe = 0;
-  let percentualAtingido = 0;
-
-  if (!cargo) {
-    document.getElementById("resultado").innerHTML = "<p><strong>Selecione um tipo de vendedor.</strong></p>";
-    return;
-  }
-
-  // Tabela VENDEU & GANHOU (fator por receita)
-  const getFator = receita => {
-    if (receita <= 1000) return 0.15;
-    else if (receita <= 1500) return 0.20;
-    else if (receita <= 2000) return 0.25;
-    else if (receita <= 2500) return 0.35;
-    else if (receita <= 3000) return 0.45;
-    else if (receita <= 3500) return 0.55;
-    else if (receita <= 4000) return 0.65;
-    else if (receita <= 4500) return 0.75;
-    else if (receita <= 5000) return 1.00;
-    else return 1.20;
-  };
-
-  if (cargo === "consultor1") {
-    // ... (código existente para Consultor I)
-  }
-  else if (cargo === "consultor2") {
-    if (receita <= 0 || metaQuantidade <= 0 || vendasQuantidade < 0) {
-      document.getElementById("resultado").innerHTML = "<p><strong>Preencha todos os campos corretamente.</strong></p>";
-      return;
+      // Mostrar/ocultar campos conforme o tipo de vendedor
+      receitaContainer.style.display = cargo === "lider" ? "none" : "block";
+      metaContainer.classList.toggle("show", false); // Não usado para Líder
+      metaQtdContainer.classList.toggle("show", cargo === "consultor2" || cargo === "lider");
+      vendasQtdContainer.classList.toggle("show", cargo === "consultor2" || cargo === "lider");
+      
+      // Ocultar checkbox de plano móvel para Líder (não precisa vender chip)
+      planoContainer.style.display = cargo === "lider" ? "none" : "block";
     }
 
-    // Calcula percentual de atingimento
-    percentualAtingido = (vendasQuantidade / metaQuantidade) * 100;
-    
-    const fator = getFator(receita);
-    comissaoVenda = receita * fator;
+    function calcularComissao() {
+      const cargo = document.getElementById("cargo").value;
+      const receita = parseFloat(document.getElementById("receita").value) || 0;
+      const metaQuantidade = parseInt(document.getElementById("meta-qtd").value) || 0;
+      const vendasQuantidade = parseInt(document.getElementById("vendas-qtd").value) || 0;
+      const vendeuPlano = document.getElementById("vendeu-plano").checked;
 
-    // Cálculo do bônus da equipe baseado na quantidade de vendas
-    if (percentualAtingido < 85) {
-      comissaoEquipe = 0;
-      resultadoHTML += `<p><strong>Status meta:</strong> <span style="color:red">Não atingida (${percentualAtingido.toFixed(2)}%)</span></p>`;
+      let resultadoHTML = "";
+      let comissaoTotal = 0;
+      let comissaoVenda = 0;
+      let comissaoEquipe = 0;
+      let percentualAtingido = 0;
+
+      if (!cargo) {
+        document.getElementById("resultado").innerHTML = "<p class='danger'><strong>Selecione um tipo de vendedor.</strong></p>";
+        return;
+      }
+
+      // Tabela VENDEU & GANHOU (fator por receita)
+      const getFator = receita => {
+        if (receita <= 1000) return 0.15;
+        else if (receita <= 1500) return 0.20;
+        else if (receita <= 2000) return 0.25;
+        else if (receita <= 2500) return 0.35;
+        else if (receita <= 3000) return 0.45;
+        else if (receita <= 3500) return 0.55;
+        else if (receita <= 4000) return 0.65;
+        else if (receita <= 4500) return 0.75;
+        else if (receita <= 5000) return 1.00;
+        else return 1.20;
+      };
+
+      // Cálculo para Consultor I
+      if (cargo === "consultor1") {
+        if (receita <= 0) {
+          document.getElementById("resultado").innerHTML = "<p class='danger'><strong>Informe um valor de receita válido.</strong></p>";
+          return;
+        }
+        
+        const fator = getFator(receita);
+        comissaoVenda = receita * fator;
+        comissaoTotal = comissaoVenda;
+        
+        // Aplica desconto de 20% se não vendeu plano móvel
+        if (!vendeuPlano) comissaoTotal *= 0.8;
+
+        resultadoHTML = `
+          <p><strong>Tipo:</strong> Consultor I PAP</p>
+          <p><strong>Receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Fator:</strong> ${fator}</p>
+          <p><strong>Comissão por venda:</strong> R$ ${comissaoVenda.toFixed(2).replace(".", ",")}</p>
+          ${!vendeuPlano ? '<p class="danger"><strong>Desconto de 20%:</strong> (não vendeu plano móvel)</p>' : ''}
+          <p class="success"><strong>Total:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
+        `;
+      }
+
+      // Cálculo para Consultor II
+      else if (cargo === "consultor2") {
+        if (receita <= 0 || metaQuantidade <= 0 || vendasQuantidade < 0) {
+          document.getElementById("resultado").innerHTML = "<p class='danger'><strong>Preencha todos os campos corretamente.</strong></p>";
+          return;
+        }
+
+        // Calcula percentual de atingimento
+        percentualAtingido = (vendasQuantidade / metaQuantidade) * 100;
+        
+        const fator = getFator(receita);
+        comissaoVenda = receita * fator;
+
+        // Cálculo do bônus da equipe baseado na quantidade de vendas
+        if (percentualAtingido < 85) {
+          comissaoEquipe = 0;
+          resultadoHTML += `<p class="danger"><strong>Status meta:</strong> Não atingida (${percentualAtingido.toFixed(2)}%)</p>`;
+        }
+        else if (percentualAtingido < 100) {
+          comissaoEquipe = 250; // R$ 250 para 85%-99,99%
+          resultadoHTML += `<p><strong>Status meta:</strong> ${percentualAtingido.toFixed(2)}% (bônus parcial)</p>`;
+        }
+        else {
+          comissaoEquipe = 450; // R$ 450 base para ≥100%
+          const adicional = Math.floor((Math.min(percentualAtingido, 140) - 100) / 5);
+          comissaoEquipe += adicional * 100; // R$ 100 a cada 5% adicional
+          resultadoHTML += `<p class="success"><strong>Status meta:</strong> ${percentualAtingido.toFixed(2)}% (meta atingida ou superada)</p>`;
+        }
+
+        comissaoTotal = comissaoVenda + comissaoEquipe;
+        
+        // Aplica desconto de 20% se não vendeu plano móvel
+        if (!vendeuPlano) comissaoTotal *= 0.8;
+
+        resultadoHTML = `
+          <p><strong>Tipo:</strong> Consultor II PAP</p>
+          <p><strong>Receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Fator:</strong> ${fator}</p>
+          <p><strong>Comissão por venda:</strong> R$ ${comissaoVenda.toFixed(2).replace(".", ",")}</p>
+          <p><strong>Meta de quantidade:</strong> ${metaQuantidade} vendas</p>
+          <p><strong>Vendas realizadas:</strong> ${vendasQuantidade} vendas</p>
+          ${resultadoHTML}
+          <p><strong>Bônus da equipe:</strong> R$ ${comissaoEquipe.toFixed(2).replace(".", ",")}</p>
+          ${!vendeuPlano ? '<p class="danger"><strong>Desconto de 20%:</strong> (não vendeu plano móvel)</p>' : ''}
+          <p class="success"><strong>Total:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
+        `;
+      }
+
+      // Cálculo para Líder PAP (regras específicas da imagem)
+      else if (cargo === "lider") {
+        if (metaQuantidade <= 0 || vendasQuantidade < 0) {
+          document.getElementById("resultado").innerHTML = "<p class='danger'><strong>Preencha todos os campos corretamente.</strong></p>";
+          return;
+        }
+
+        // Calcula percentual de atingimento
+        percentualAtingido = (vendasQuantidade / metaQuantidade) * 100;
+        
+        // Cálculo exato conforme a tabela da imagem
+        if (percentualAtingido < 85) {
+          comissaoTotal = 0;
+          resultadoHTML += `<p class="danger"><strong>Status meta:</strong> Não atingida (${percentualAtingido.toFixed(2)}%)</p>`;
+        }
+        else if (percentualAtingido < 100) {
+          comissaoTotal = 600; // R$ 600 para 85% a 99,99%
+          resultadoHTML += `<p><strong>Status meta:</strong> ${percentualAtingido.toFixed(2)}% (bônus parcial)</p>`;
+        }
+        else {
+          comissaoTotal = 1000; // R$ 1000 base para ≥100%
+          const adicional = Math.floor((Math.min(percentualAtingido, 140) - 100) / 5);
+          comissaoTotal += adicional * 200; // R$ 200 a cada 5% adicional
+          resultadoHTML += `<p class="success"><strong>Status meta:</strong> ${percentualAtingido.toFixed(2)}% (meta atingida ou superada)</p>`;
+        }
+
+        // Líder não tem desconto por não vender chip
+
+        resultadoHTML = `
+          <p><strong>Tipo:</strong> Líder PAP</p>
+          <p><strong>Meta de quantidade:</strong> ${metaQuantidade} vendas</p>
+          <p><strong>Vendas realizadas:</strong> ${vendasQuantidade} vendas</p>
+          <p><strong>Atingimento:</strong> ${percentualAtingido.toFixed(2)}%</p>
+          ${resultadoHTML}
+          <p class="success"><strong>Total:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
+        `;
+      }
+
+      document.getElementById("resultado").innerHTML = resultadoHTML;
     }
-    else if (percentualAtingido < 100) {
-      comissaoEquipe = 250; // R$ 250 para 85%-99,99%
-    }
-    else {
-      comissaoEquipe = 450; // R$ 450 base para ≥100%
-      const adicional = Math.floor((Math.min(percentualAtingido, 140) - 100) / 5);
-      comissaoEquipe += adicional * 100; // R$ 100 a cada 5% adicional
-    }
 
-    comissaoTotal = comissaoVenda + comissaoEquipe;
-    
-    // Aplica desconto de 20% se não vendeu plano móvel
-    if (!vendeuPlano) comissaoTotal *= 0.8;
-
-    resultadoHTML = `
-      <p><strong>Tipo:</strong> Consultor II PAP</p>
-      <p><strong>Receita:</strong> R$ ${receita.toFixed(2).replace(".", ",")}</p>
-      <p><strong>Fator:</strong> ${fator}</p>
-      <p><strong>Comissão por venda:</strong> R$ ${comissaoVenda.toFixed(2).replace(".", ",")}</p>
-      <p><strong>Meta de quantidade:</strong> ${metaQuantidade} vendas</p>
-      <p><strong>Vendas realizadas:</strong> ${vendasQuantidade} vendas</p>
-      <p><strong>Atingimento:</strong> ${percentualAtingido.toFixed(2)}%</p>
-      <p><strong>Bônus da equipe:</strong> R$ ${comissaoEquipe.toFixed(2).replace(".", ",")}</p>
-      ${!vendeuPlano ? '<p><strong>Desconto de 20%:</strong> (não vendeu plano móvel)</p>' : ''}
-      <p><strong>Total:</strong> R$ ${comissaoTotal.toFixed(2).replace(".", ",")}</p>
-    `;
-  }
-  else if (cargo === "lider") {
-    // ... (código existente para Líder)
-  }
-
-  document.getElementById("resultado").innerHTML = resultadoHTML;
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  toggleAdditionalInputs();
-});
+    document.addEventListener('DOMContentLoaded', function() {
+      toggleAdditionalInputs();
+    });
   </script>
   <footer><p>Desenvolvido por Henrique Oliveira</p></footer>
 </body>
