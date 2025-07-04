@@ -136,11 +136,6 @@
       <input type="number" id="receita" placeholder="0,00" min="0" step="0.01" />
     </div>
 
-    <div id="meta-container" class="additional-input">
-      <label for="meta">Atingimento da meta (%):</label>
-      <input type="number" id="meta" placeholder="0" min="0" max="140" step="0.01" />
-    </div>
-
     <div id="meta-qtd-container" class="additional-input">
       <label for="meta-qtd">Meta (quantidade de vendas):</label>
       <input type="number" id="meta-qtd" placeholder="0" min="1" />
@@ -165,14 +160,12 @@
     function toggleAdditionalInputs() {
       const cargo = document.getElementById("cargo").value;
       const receitaContainer = document.getElementById("receita-container");
-      const metaContainer = document.getElementById("meta-container");
       const metaQtdContainer = document.getElementById("meta-qtd-container");
       const vendasQtdContainer = document.getElementById("vendas-qtd-container");
       const planoContainer = document.getElementById("plano-container");
 
       // Mostrar/ocultar campos conforme o tipo de vendedor
       receitaContainer.style.display = cargo === "lider" ? "none" : "block";
-      metaContainer.classList.toggle("show", false); // Não usado para Líder
       metaQtdContainer.classList.toggle("show", cargo === "consultor2" || cargo === "lider");
       vendasQtdContainer.classList.toggle("show", cargo === "consultor2" || cargo === "lider");
       
@@ -284,23 +277,23 @@
         `;
       }
 
-      // Cálculo para Líder PAP (regras específicas da imagem)
+      // Cálculo para Líder PAP (mesmos campos do Consultor II, mas com regras diferentes)
       else if (cargo === "lider") {
         if (metaQuantidade <= 0 || vendasQuantidade < 0) {
           document.getElementById("resultado").innerHTML = "<p class='danger'><strong>Preencha todos os campos corretamente.</strong></p>";
           return;
         }
 
-        // Calcula percentual de atingimento
+        // Calcula percentual de atingimento (mesmo cálculo do Consultor II)
         percentualAtingido = (vendasQuantidade / metaQuantidade) * 100;
         
-        // Cálculo exato conforme a tabela da imagem
+        // Regras específicas para Líder conforme a imagem
         if (percentualAtingido < 85) {
           comissaoTotal = 0;
           resultadoHTML += `<p class="danger"><strong>Status meta:</strong> Não atingida (${percentualAtingido.toFixed(2)}%)</p>`;
         }
         else if (percentualAtingido < 100) {
-          comissaoTotal = 600; // R$ 600 para 85% a 99,99%
+          comissaoTotal = 600; // R$ 600 para 85%-99,99%
           resultadoHTML += `<p><strong>Status meta:</strong> ${percentualAtingido.toFixed(2)}% (bônus parcial)</p>`;
         }
         else {
@@ -310,7 +303,7 @@
           resultadoHTML += `<p class="success"><strong>Status meta:</strong> ${percentualAtingido.toFixed(2)}% (meta atingida ou superada)</p>`;
         }
 
-        // Líder não tem desconto por não vender chip
+        // Líder não tem desconto por não vender chip (checkbox está oculto)
 
         resultadoHTML = `
           <p><strong>Tipo:</strong> Líder PAP</p>
